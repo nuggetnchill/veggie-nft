@@ -1,5 +1,8 @@
 import React, {useEffect, useState} from "react";
+import { ethers } from "ethers";
+
 import './styles/App.css';
+import myEpicNft from './utils/MyEpicNFT.json'
 
 // Constants
 const OPENSEA_LINK = '';
@@ -46,6 +49,32 @@ const App = () => {
     }
   }
 
+  // Ask Contract to Mint NFT
+  const askContractToMintNft = async () => {
+    const CONTRACT_ADDRESS = "0x73f0973Baf2224248E29F6f17943188F356d73F4";
+      try {
+        const { ethereum } = window;
+  
+        if (ethereum) {
+          const provider = new ethers.providers.Web3Provider(ethereum);
+          const signer = provider.getSigner();
+          const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, myEpicNft.abi, signer);
+  
+          console.log("Going to pop wallet now to pay gas...")
+          let nftTxn = await connectedContract.makeAnEpicNFT();
+  
+          console.log("Mining...please wait.")
+          await nftTxn.wait();
+          
+          console.log(`Mined, see transaction: https://rinkeby.etherscan.io/tx/${nftTxn.hash}`);
+  
+        } else {
+          console.log("Ethereum object doesn't exist!");
+        }
+      } catch (error) {
+        console.log(error)
+      }
+  }
 
   const renderNotConnectedContainer = () => (
     <button 
@@ -72,7 +101,7 @@ const App = () => {
           {currentAccount === "" ? (
               renderNotConnectedContainer()
             ) : (
-              <button onclick={null} className="cta-button connect-wallet-button" >Mint NFT</button>
+              <button onClick={askContractToMintNft} className="cta-button connect-wallet-button" >Mint NFT</button>
             )
           }
 
