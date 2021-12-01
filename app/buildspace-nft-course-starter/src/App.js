@@ -8,6 +8,8 @@ import myEpicNft from './utils/MyEpicNFT.json'
 const OPENSEA_LINK = '';
 const TOTAL_MINT_COUNT = 50;
 
+const CONTRACT_ADDRESS = "0xc0C477C675A6D1e0c5D4c350F1C54C9892bfcA53";
+
 const App = () => {
 
   const [currentAccount, setCurrentAccount] = useState("");
@@ -28,6 +30,7 @@ const App = () => {
       const account = accounts[0];
       console.log("Found an authorized account:", account);
       setCurrentAccount(account);
+      setupEventListener()
     } else {
         console.log('No authorized account found');
     }
@@ -43,15 +46,40 @@ const App = () => {
       const accounts = await ethereum.request({ method: "eth_requestAccounts" });
       console.log("Connected to account: ", accounts[0])
       setCurrentAccount(accounts[0]);
-
+      setupEventListener()
     } catch (error) {
         console.log(error)
     }
   }
 
+  // Setup listener
+  const setupEventListener = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, myEpicNft.abi, signer);
+
+        connectedContract.on("EpicNFTMinted", (from, tokenId) =>{
+          console.log(from, tokenId.toNumber())
+          alert(`Hey there! We've minted your NFT and sent it to your wallet. It may be blank right now. It can take a max of 10 min to show up on OpenSea. Here's the link: https://testnets.opensea.io/assets/${CONTRACT_ADDRESS}/${tokenId.toNumber()}`)
+        })
+
+        console.log("Setup event listener")
+        
+      } else {
+        console.log("Ethereum object doesn't exist'")
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+
   // Ask Contract to Mint NFT
   const askContractToMintNft = async () => {
-    const CONTRACT_ADDRESS = "0x73f0973Baf2224248E29F6f17943188F356d73F4";
       try {
         const { ethereum } = window;
   
